@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bible Quiz</title>
+<style>
+:root {
+  --bg:#f4f6f3; --card:#fff; --ink:#1c2722; --muted:#647068;
+  --line:#dfe5e0; --accent:#233f34; --accent2:#d9e6df; --good:#2f6b4f; --bad:#8b3a3a;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:760px;margin:auto;padding:18px}
+header{padding:12px 2px 18px}
+h1{font-size:clamp(1.65rem,4vw,2.3rem);margin:.2rem 0}
+.subtitle{color:var(--muted);line-height:1.45}
+.bar{height:10px;background:#e4e9e5;border-radius:999px;overflow:hidden;margin:14px 0 6px}
+.bar>div{height:100%;background:var(--accent);width:0;transition:.25s}
+.meta{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 3px 14px rgba(0,0,0,.04)}
+.qnum{font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.question{font-size:1.12rem;font-weight:700;line-height:1.4;margin:8px 0 14px}
+.option{display:block;border:1px solid var(--line);padding:12px 13px;border-radius:12px;margin:9px 0;cursor:pointer;line-height:1.35}
+.option:hover{border-color:#aab8af;background:#fafcfb}
+.option input{margin-right:10px}
+.actions{position:sticky;bottom:0;padding:12px 0 18px;background:linear-gradient(transparent,var(--bg) 28%)}
+button{width:100%;border:0;border-radius:14px;padding:14px 18px;font-size:1rem;font-weight:750;cursor:pointer}
+.primary{background:var(--accent);color:#fff}
+.secondary{background:var(--accent2);color:var(--ink);margin-top:10px}
+.result{text-align:center;padding:28px 18px}
+.score{font-size:3.4rem;font-weight:850;margin:6px 0}
+.tier{font-size:1.25rem;font-weight:800;margin-bottom:8px}
+.review{text-align:left;margin-top:20px}
+.review-item{border-top:1px solid var(--line);padding:12px 0}
+.correct{color:var(--good);font-weight:700}
+.wrong{color:var(--bad);font-weight:700}
+.ref{color:var(--muted);font-size:.88rem;margin-top:4px}
+.hidden{display:none}
+.footer{text-align:center;color:var(--muted);font-size:.85rem;padding:12px 0 30px}
+@media (max-width:520px){
+  .wrap{padding:12px} .card{padding:15px;border-radius:15px}
+  .question{font-size:1.05rem} .option{padding:11px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="qnum">Bible Quiz</div>
+  <h1>Bible Quiz</h1>
+  <div class="subtitle">Take the quiz in 10-question rounds. Your score appears after each round, then you can continue to the next set.</div>
+  <div class="bar"><div id="progressBar"></div></div>
+  <div class="meta"><span id="roundLabel"></span><span id="progressLabel"></span></div>
+</header>
+
+<main id="quiz"></main>
+<section id="results" class="card result hidden"></section>
+<div class="actions" id="actions">
+  <button class="primary" id="submitBtn">Score This Round</button>
+</div>
+<div class="footer">100 questions • 10 rounds</div>
+</div>
+
+<script>
+const questions = [{"q": "Who created the heavens and the earth?", "options": ["Moses", "Abraham", "God", "The angels"], "answer": 2, "ref": "Genesis 1:1"}, {"q": "Who were the first man and woman in the Bible?", "options": ["Abraham and Sarah", "Adam and Eve", "Isaac and Rebekah", "Noah and his wife"], "answer": 1, "ref": "Genesis 2"}, {"q": "What did Noah build at God's command?", "options": ["A temple", "A tower", "An ark", "An altar only"], "answer": 2, "ref": "Genesis 6:14"}, {"q": "Who did God call to leave his homeland and promised to make into a great nation?", "options": ["Abraham", "David", "Elijah", "Samuel"], "answer": 0, "ref": "Genesis 12:1–2"}, {"q": "Who led the Israelites out of slavery in Egypt?", "options": ["Joshua", "Moses", "Aaron", "Joseph"], "answer": 1, "ref": "Exodus 3–14"}, {"q": "What body of water did God part for the Israelites?", "options": ["Dead Sea", "Sea of Galilee", "Red Sea", "Mediterranean Sea"], "answer": 2, "ref": "Exodus 14"}, {"q": "On what mountain did Moses receive the Ten Commandments?", "options": ["Carmel", "Sinai", "Zion", "Ararat"], "answer": 1, "ref": "Exodus 19–20"}, {"q": "Who defeated Goliath?", "options": ["Saul", "Solomon", "David", "Samuel"], "answer": 2, "ref": "1 Samuel 17"}, {"q": "Who was known for extraordinary wisdom and built the first temple in Jerusalem?", "options": ["David", "Solomon", "Elijah", "Isaiah"], "answer": 1, "ref": "1 Kings 3; 6"}, {"q": "Who was swallowed by a great fish after fleeing God's command?", "options": ["Jonah", "Amos", "Peter", "Jeremiah"], "answer": 0, "ref": "Jonah 1"}, {"q": "Who was thrown into a den of lions?", "options": ["Isaiah", "Daniel", "Ezekiel", "Jeremiah"], "answer": 1, "ref": "Daniel 6"}, {"q": "In what town was Jesus born?", "options": ["Nazareth", "Jerusalem", "Bethlehem", "Capernaum"], "answer": 2, "ref": "Matthew 2:1; Luke 2:4–7"}, {"q": "Who was Jesus' mother?", "options": ["Martha", "Elizabeth", "Mary", "Ruth"], "answer": 2, "ref": "Luke 1"}, {"q": "Who baptized Jesus?", "options": ["Peter", "John the Baptist", "James", "Andrew"], "answer": 1, "ref": "Matthew 3:13–17"}, {"q": "How many apostles did Jesus specially appoint?", "options": ["7", "10", "12", "40"], "answer": 2, "ref": "Mark 3:13–19"}, {"q": "What did Jesus turn water into at Cana?", "options": ["Milk", "Oil", "Wine", "Honey"], "answer": 2, "ref": "John 2:1–11"}, {"q": "Jesus fed more than 5,000 people using five loaves and how many fish?", "options": ["One", "Two", "Five", "Twelve"], "answer": 1, "ref": "Matthew 14:17–21"}, {"q": "Who walked on water toward Jesus?", "options": ["Peter", "John", "Thomas", "Matthew"], "answer": 0, "ref": "Matthew 14:28–31"}, {"q": "Who betrayed Jesus?", "options": ["Peter", "Thomas", "Judas Iscariot", "Nicodemus"], "answer": 2, "ref": "Matthew 26:14–16"}, {"q": "What happened on the third day after Jesus was crucified?", "options": ["His disciples left Jerusalem forever", "Jesus rose from the dead", "The temple was destroyed", "Paul was converted"], "answer": 1, "ref": "1 Corinthians 15:3–4; Luke 24"}, {"q": "According to John 3:16, why did God give His only Son?", "options": ["Because the world had earned salvation", "Because God loved the world", "Because Israel requested a king", "Because the disciples demanded it"], "answer": 1, "ref": "John 3:16"}, {"q": "According to Romans 3:23, who has sinned?", "options": ["Only unbelievers", "Only Israel", "Everyone except the apostles", "All people"], "answer": 3, "ref": "Romans 3:23"}, {"q": "According to Romans 6:23, the wages of sin is:", "options": ["Poverty", "Death", "Ignorance", "Exile"], "answer": 1, "ref": "Romans 6:23"}, {"q": "According to Romans 6:23, the gift of God is:", "options": ["Earthly prosperity", "Political freedom", "Eternal life in Christ Jesus", "Perfect health"], "answer": 2, "ref": "Romans 6:23"}, {"q": "According to Ephesians 2:8, we are saved by:", "options": ["Grace through faith", "Good deeds alone", "Religious ancestry", "Knowledge alone"], "answer": 0, "ref": "Ephesians 2:8"}, {"q": "Ephesians 2:9 says salvation is not a result of:", "options": ["Grace", "Faith", "Works", "Christ"], "answer": 2, "ref": "Ephesians 2:9"}, {"q": "According to Romans 5:8, God demonstrates His love for us in that:", "options": ["Christ died for us while we were sinners", "Christians never experience suffering", "Everyone receives wealth", "Sin has no consequences"], "answer": 0, "ref": "Romans 5:8"}, {"q": "When John the Baptist saw Jesus, he called Him:", "options": ["The Lion of Judah", "The Lamb of God", "The Son of David only", "The Great Prophet"], "answer": 1, "ref": "John 1:29"}, {"q": "What did Jesus say He came to do in Luke 19:10?", "options": ["Establish an earthly empire", "Seek and save the lost", "Remove Rome immediately", "Write a new law"], "answer": 1, "ref": "Luke 19:10"}, {"q": "Jesus told Nicodemus that a person must be:", "options": ["Born again", "Wealthy", "A priest", "Born in Israel"], "answer": 0, "ref": "John 3:3"}, {"q": "According to 2 Corinthians 5:17, anyone who is in Christ is:", "options": ["Free from every earthly problem", "A new creation", "Automatically a teacher", "Unable to sin"], "answer": 1, "ref": "2 Corinthians 5:17"}, {"q": "Who does Jesus identify as the way, the truth, and the life?", "options": ["Moses", "Scripture apart from Him", "Himself", "The apostles"], "answer": 2, "ref": "John 14:6"}, {"q": "According to Acts 4:12, salvation is found in:", "options": ["Jesus Christ", "Human wisdom", "Political authority", "Religious achievement"], "answer": 0, "ref": "Acts 4:12"}, {"q": "According to 1 John 1:9, if we confess our sins, God is faithful and just to:", "options": ["Ignore them", "Forgive and cleanse us", "Punish us immediately", "Require us to earn forgiveness"], "answer": 1, "ref": "1 John 1:9"}, {"q": "What did the Philippian jailer ask Paul and Silas?", "options": ["How can I become wealthy?", "What must I do to be saved?", "Who will rule Rome?", "Where is Jerusalem?"], "answer": 1, "ref": "Acts 16:30"}, {"q": "Their response was to believe in:", "options": ["Caesar", "Moses alone", "The Lord Jesus", "Paul"], "answer": 2, "ref": "Acts 16:31"}, {"q": "According to Romans 10:9, a Christian confesses that:", "options": ["Jesus is Lord", "Caesar is lord", "Human nature is perfect", "Works produce salvation"], "answer": 0, "ref": "Romans 10:9"}, {"q": "What happened to the curtain of the temple when Jesus died?", "options": ["It disappeared", "It was torn in two", "It turned red", "Nothing happened"], "answer": 1, "ref": "Matthew 27:51"}, {"q": "According to 1 Corinthians 15, what is essential to the Gospel?", "options": ["Christ died for our sins and was raised", "Jesus became an earthly king", "Christians must follow Jewish civil law", "Rome would soon collapse"], "answer": 0, "ref": "1 Corinthians 15:3–4"}, {"q": "According to Titus 3:5, God saves us primarily because of:", "options": ["Our righteous deeds", "His mercy", "Our intelligence", "Our ancestry"], "answer": 1, "ref": "Titus 3:5"}, {"q": "Jesus said the greatest commandment is to love:", "options": ["Yourself above everyone", "The Lord your God", "Only your family", "Only Christians"], "answer": 1, "ref": "Matthew 22:37–38"}, {"q": "Jesus said the second greatest commandment is to:", "options": ["Love your neighbor as yourself", "Accumulate wealth", "Avoid outsiders", "Become a teacher"], "answer": 0, "ref": "Matthew 22:39"}, {"q": "Jesus said His disciples would be known by their:", "options": ["Clothing", "Wealth", "Love for one another", "Political influence"], "answer": 2, "ref": "John 13:35"}, {"q": "Jesus commanded His followers to make disciples of:", "options": ["Israel alone", "Religious leaders", "All nations", "The Roman Empire only"], "answer": 2, "ref": "Matthew 28:19"}, {"q": "Jesus said, “If you love me, ______.”", "options": ["Keep my commandments", "Build a temple", "Avoid unbelievers", "Become wealthy"], "answer": 0, "ref": "John 14:15"}, {"q": "According to James, faith without works is:", "options": ["Complete", "Dead", "Sufficiently mature", "More spiritual"], "answer": 1, "ref": "James 2:17"}, {"q": "Which is a fruit of the Spirit?", "options": ["Envy", "Jealousy", "Love", "Pride"], "answer": 2, "ref": "Galatians 5:22"}, {"q": "Which is NOT listed among the fruit of the Spirit in Galatians 5?", "options": ["Patience", "Kindness", "Self-control", "Ambition"], "answer": 3, "ref": "Galatians 5:22–23"}, {"q": "Romans 12:2 tells Christians not to conform to:", "options": ["This world", "Scripture", "God's will", "Christian fellowship"], "answer": 0, "ref": "Romans 12:2"}, {"q": "Instead, Romans 12:2 tells believers to be transformed by:", "options": ["Political power", "The renewing of their minds", "Material success", "Isolation"], "answer": 1, "ref": "Romans 12:2"}, {"q": "According to Micah 6:8, God calls His people to do justice, love mercy, and:", "options": ["Walk humbly with God", "Become rulers", "Seek riches", "Avoid strangers"], "answer": 0, "ref": "Micah 6:8"}, {"q": "Jesus taught His followers to forgive:", "options": ["Only once", "Only when convenient", "Repeatedly and generously", "Only close friends"], "answer": 2, "ref": "Matthew 18:21–22"}, {"q": "According to Jesus, we should pray for:", "options": ["Only our families", "Our enemies", "Only church members", "Nobody who mistreats us"], "answer": 1, "ref": "Matthew 5:44"}, {"q": "What did Jesus say a person must take up in order to follow Him?", "options": ["A crown", "A sword", "A cross", "A scroll"], "answer": 2, "ref": "Luke 9:23"}, {"q": "According to Jesus, whoever wants to be great among His disciples must become a:", "options": ["Ruler", "Servant", "Scholar", "Soldier"], "answer": 1, "ref": "Mark 10:43"}, {"q": "According to Hebrews 12:14, Christians should pursue:", "options": ["Fame", "Holiness", "Wealth", "Political influence"], "answer": 1, "ref": "Hebrews 12:14"}, {"q": "According to 1 Peter 1:15–16, believers are called to be:", "options": ["Popular", "Successful", "Holy", "Powerful"], "answer": 2, "ref": "1 Peter 1:15–16"}, {"q": "According to Philippians 2:5, Christians should have the same mindset as:", "options": ["Moses", "David", "Christ Jesus", "Solomon"], "answer": 2, "ref": "Philippians 2:5"}, {"q": "Jesus said a healthy tree is known by its:", "options": ["Height", "Fruit", "Age", "Location"], "answer": 1, "ref": "Matthew 7:16–20"}, {"q": "According to Colossians 3:17, Christians should do everything:", "options": ["For personal recognition", "In the name of the Lord Jesus", "Only when others are watching", "To avoid suffering"], "answer": 1, "ref": "Colossians 3:17"}, {"q": "According to John 6:44, who takes the initiative in drawing people toward Christ?", "options": ["The Father", "The pastor", "The individual alone", "The government"], "answer": 0, "ref": "John 6:44"}, {"q": "According to John 12:32, Jesus said that when He is lifted up He will:", "options": ["Draw all people to Himself", "Establish an earthly throne", "Condemn Israel alone", "End human freedom"], "answer": 0, "ref": "John 12:32"}, {"q": "These passages help support the Wesleyan doctrine that God's grace works in us even before conversion. What is this grace commonly called?", "options": ["Prevenient grace", "Sacramental grace only", "Ecclesiastical grace", "Temporal grace"], "answer": 0, "ref": "Wesleyan doctrine"}, {"q": "According to Romans 2:4, God's kindness is intended to lead us toward:", "options": ["Wealth", "Repentance", "Political authority", "Knowledge alone"], "answer": 1, "ref": "Romans 2:4"}, {"q": "On Pentecost, when people asked what they should do, Peter first told them to:", "options": ["Repent", "Become priests", "Leave Jerusalem", "Study Greek"], "answer": 0, "ref": "Acts 2:38"}, {"q": "Peter then instructed them to be:", "options": ["Circumcised", "Baptized in the name of Jesus Christ", "Ordained", "Sent immediately as missionaries"], "answer": 1, "ref": "Acts 2:38"}, {"q": "According to Romans 5:1, being justified by faith gives us:", "options": ["Earthly riches", "Peace with God", "Freedom from physical death", "Perfect knowledge"], "answer": 1, "ref": "Romans 5:1"}, {"q": "According to Romans 8:16, who bears witness with our spirit that we are God's children?", "options": ["An angel", "The Holy Spirit", "The pastor", "Moses"], "answer": 1, "ref": "Romans 8:16"}, {"q": "According to 1 Thessalonians 5:23, Paul prays that God will:", "options": ["Make believers wealthy", "Sanctify believers completely", "Remove all earthly difficulties", "Give everyone the same spiritual gift"], "answer": 1, "ref": "1 Thessalonians 5:23"}, {"q": "Hebrews 10:14 connects Christ's sacrifice with believers who are being:", "options": ["Sanctified", "Politically liberated", "Educated", "Ordained"], "answer": 0, "ref": "Hebrews 10:14"}, {"q": "According to Romans 6:1–2, should Christians continue in sin so that grace may increase?", "options": ["Yes", "No", "Only occasionally", "Only before baptism"], "answer": 1, "ref": "Romans 6:1–2"}, {"q": "Romans 6 teaches that believers should consider themselves dead to sin and alive to:", "options": ["The law", "God in Christ Jesus", "Their desires", "Society"], "answer": 1, "ref": "Romans 6:11"}, {"q": "According to Philippians 2:12–13, believers work out their salvation while recognizing that:", "options": ["God works in them", "Salvation depends entirely upon human effort", "Works replace grace", "Christians no longer need God's help"], "answer": 0, "ref": "Philippians 2:12–13"}, {"q": "According to 2 Corinthians 3:18, believers are being transformed into Christ's image:", "options": ["From one degree of glory to another", "Instantly without further growth", "Through education alone", "Through suffering alone"], "answer": 0, "ref": "2 Corinthians 3:18"}, {"q": "What does Jesus command in Matthew 5:48?", "options": ["Be perfect as your heavenly Father is perfect", "Become sinlessly omniscient", "Become religious rulers", "Separate entirely from society"], "answer": 0, "ref": "Matthew 5:48"}, {"q": "In Wesleyan theology, passages commanding holiness are understood as evidence that:", "options": ["Grace not only forgives but transforms", "Christians save themselves", "Holiness is optional", "Only clergy can become holy"], "answer": 0, "ref": "Wesleyan doctrine"}, {"q": "According to Galatians 5:6, what ultimately counts is faith working through:", "options": ["Power", "Love", "Rules", "Knowledge"], "answer": 1, "ref": "Galatians 5:6"}, {"q": "According to 1 John 4:18, perfect love does what to fear?", "options": ["Increases it", "Ignores it", "Casts it out", "Makes it necessary"], "answer": 2, "ref": "1 John 4:18"}, {"q": "Which statement best reflects 1 John 4:20?", "options": ["Love of God can be separated completely from love of neighbor", "Claiming to love God while hating another person is contradictory", "Christians only need to love other Christians", "Correct doctrine makes love unnecessary"], "answer": 1, "ref": "1 John 4:20"}, {"q": "Which biblical command most directly summarizes the Wesleyan idea of holiness expressed through love?", "options": ["Love God and love your neighbor", "Accumulate wisdom and wealth", "Separate from everyone who disagrees", "Obey civil rulers above God"], "answer": 0, "ref": "Matthew 22:37–39"}, {"q": "Which passage most explicitly identifies Father, Son, and Holy Spirit together in Christian baptism?", "options": ["Genesis 1:1", "Matthew 28:19", "Psalm 23:1", "Romans 3:23"], "answer": 1, "ref": "Matthew 28:19"}, {"q": "At Jesus' baptism, which three divine persons are distinctly present?", "options": ["Father, Son, and Holy Spirit", "Father, Son, and Gabriel", "Jesus, Moses, and Elijah", "Father, Michael, and Jesus"], "answer": 0, "ref": "Matthew 3:16–17"}, {"q": "John 1:1 says the Word was with God and:", "options": ["Became God later", "Was God", "Was an angel", "Was merely human"], "answer": 1, "ref": "John 1:1"}, {"q": "John 1:14 says the Word:", "options": ["Became flesh", "Became an angel", "Remained distant from humanity", "Became Scripture"], "answer": 0, "ref": "John 1:14"}, {"q": "Philippians 2 teaches that Christ, though existing in the form of God, humbled Himself by:", "options": ["Becoming obedient even to death on a cross", "Abandoning humanity", "Refusing death", "Becoming an earthly king"], "answer": 0, "ref": "Philippians 2:5–8"}, {"q": "According to Colossians 1:15–17, how extensive is Christ's role in creation?", "options": ["He created only humanity", "All things were created through Him and for Him", "He participated only after creation", "He created only spiritual things"], "answer": 1, "ref": "Colossians 1:15–17"}, {"q": "Hebrews 4:15 teaches that Jesus was tempted as we are, yet:", "options": ["Never experienced suffering", "Was without sin", "Never experienced weakness", "Was not fully human"], "answer": 1, "ref": "Hebrews 4:15"}, {"q": "According to 2 Corinthians 5:21, Christ knew no:", "options": ["Suffering", "Sin", "Temptation", "Human emotion"], "answer": 1, "ref": "2 Corinthians 5:21"}, {"q": "According to Isaiah 53:5, the suffering servant was wounded for:", "options": ["His own rebellion", "Our transgressions", "Rome's sins alone", "Israel's military defeat"], "answer": 1, "ref": "Isaiah 53:5"}, {"q": "According to 1 Peter 2:24, Christ bore our sins:", "options": ["In His body on the tree", "Through teaching alone", "Through political resistance", "Only symbolically in the temple"], "answer": 0, "ref": "1 Peter 2:24"}, {"q": "According to 1 Timothy 2:5, how many mediators are there between God and humanity?", "options": ["Many", "Twelve", "One", "Seventy"], "answer": 2, "ref": "1 Timothy 2:5"}, {"q": "Who is that mediator?", "options": ["Moses", "The man Christ Jesus", "Peter", "Abraham"], "answer": 1, "ref": "1 Timothy 2:5"}, {"q": "According to 1 Corinthians 15:14, if Christ has not been raised, Christian faith is:", "options": ["Stronger", "In vain", "Merely incomplete", "Unaffected"], "answer": 1, "ref": "1 Corinthians 15:14"}, {"q": "According to 1 Corinthians 15:20, Christ is described as the ______ of those who have died.", "options": ["Judge only", "Firstfruits", "Final prophet", "High priest only"], "answer": 1, "ref": "1 Corinthians 15:20"}, {"q": "According to 1 Corinthians 15:52, at the resurrection the dead will be raised:", "options": ["Imperishable", "As spirits without bodies", "Only temporarily", "Exactly as they died"], "answer": 0, "ref": "1 Corinthians 15:52"}, {"q": "According to Acts 1:8, what empowers Christians to be witnesses?", "options": ["Education", "The Holy Spirit", "Government authority", "Wealth"], "answer": 1, "ref": "Acts 1:8"}, {"q": "According to 1 Corinthians 12, spiritual gifts are given by:", "options": ["The same Spirit", "Human merit", "Church rank", "Academic achievement"], "answer": 0, "ref": "1 Corinthians 12:4–11"}, {"q": "According to Romans 8:11, the Spirit who raised Jesus from the dead will also:", "options": ["Give life to believers' mortal bodies", "Prevent Christians from dying", "Remove the need for resurrection", "Replace Christ"], "answer": 0, "ref": "Romans 8:11"}, {"q": "According to Revelation 21, what ultimately happens to death in God's renewed creation?", "options": ["It continues forever", "There will be no more death", "Only believers continue dying", "Death becomes less common"], "answer": 1, "ref": "Revelation 21:4"}, {"q": "Which choice best summarizes the biblical story of salvation emphasized in GMC doctrine?", "options": ["Humanity is basically righteous and needs only better instruction", "God creates humanity, humanity falls into sin, God acts in grace through Christ to save and transform us, and Christ will ultimately make all things new", "Salvation comes through works and religious achievement", "Christianity is primarily about improving society rather than reconciliation with God"], "answer": 1, "ref": "Genesis 1–3; John 3:16; Ephesians 2:8–10; Revelation 21"}];
+let round = Number(localStorage.getItem('gmcQuizRound') || 0);
+if (round < 0 || round > 9) round = 0;
+
+const quiz = document.getElementById('quiz');
+const results = document.getElementById('results');
+const submitBtn = document.getElementById('submitBtn');
+const actions = document.getElementById('actions');
+const roundLabel = document.getElementById('roundLabel');
+const progressLabel = document.getElementById('progressLabel');
+const progressBar = document.getElementById('progressBar');
+
+function renderRound(){
+  results.classList.add('hidden');
+  quiz.classList.remove('hidden');
+  actions.classList.remove('hidden');
+  quiz.innerHTML = '';
+  const start = round * 10;
+  const end = start + 10;
+  roundLabel.textContent = `Round ${round+1} of 10`;
+  progressLabel.textContent = `Questions ${start+1}–${end}`;
+  progressBar.style.width = `${round*10}%`;
+
+  questions.slice(start,end).forEach((item,idx)=>{
+    const n = start + idx;
+    const card = document.createElement('section');
+    card.className='card';
+    const letters=['A','B','C','D'];
+    card.innerHTML = `
+      <div class="qnum">Question ${n+1}</div>
+      <div class="question">${item.q}</div>
+      ${item.options.map((o,i)=>`
+        <label class="option">
+          <input type="radio" name="q${n}" value="${i}">
+          <strong>${letters[i]}.</strong> ${o}
+        </label>`).join('')}
+    `;
+    quiz.appendChild(card);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function scoreRound(){
+  const start = round * 10;
+  let score = 0;
+  let answered = 0;
+  let review = '';
+  const letters=['A','B','C','D'];
+
+  for(let i=0;i<10;i++){
+    const qi = start+i;
+    const chosen = document.querySelector(`input[name="q${qi}"]:checked`);
+    if(chosen) answered++;
+  }
+
+  if(answered < 10){
+    alert(`Please answer all 10 questions before scoring. You have answered ${answered} of 10.`);
+    return;
+  }
+
+  for(let i=0;i<10;i++){
+    const qi = start+i;
+    const item = questions[qi];
+    const chosen = Number(document.querySelector(`input[name="q${qi}"]:checked`).value);
+    const ok = chosen === item.answer;
+    if(ok) score++;
+    review += `
+      <div class="review-item">
+        <div><strong>${qi+1}.</strong> ${item.q}</div>
+        <div class="${ok?'correct':'wrong'}">${ok?'✓ Correct':'✕ Your answer: '+letters[chosen]+'. '+item.options[chosen]}</div>
+        ${ok?'':`<div class="correct">Correct answer: ${letters[item.answer]}. ${item.options[item.answer]}</div>`}
+        <div class="ref">${item.ref}</div>
+      </div>`;
+  }
+
+  const tier = score===10 ? 'Perfect Round' :
+               score>=8 ? 'Excellent' :
+               score>=6 ? 'Solid' :
+               score>=4 ? 'Keep Building' : 'Time for a Rematch';
+
+  quiz.classList.add('hidden');
+  actions.classList.add('hidden');
+  results.classList.remove('hidden');
+  progressBar.style.width = `${(round+1)*10}%`;
+
+  const isLast = round === 9;
+  results.innerHTML = `
+    <div class="qnum">Round ${round+1} Complete</div>
+    <div class="score">${score}/10</div>
+    <div class="tier">${tier}</div>
+    <div class="subtitle">${isLast ? 'You completed all 100 questions.' : `Ready for questions ${start+11}–${start+20}?`}</div>
+    <button class="primary" id="nextBtn">${isLast ? 'Start Over' : 'Take the Next Quiz'}</button>
+    <button class="secondary" id="reviewBtn">Review This Round</button>
+    <div id="reviewBox" class="review hidden">${review}</div>
+  `;
+
+  document.getElementById('nextBtn').onclick = ()=>{
+    if(isLast){
+      round=0;
+      localStorage.removeItem('gmcQuizRound');
+    } else {
+      round++;
+      localStorage.setItem('gmcQuizRound', round);
+    }
+    renderRound();
+  };
+
+  document.getElementById('reviewBtn').onclick = ()=>{
+    document.getElementById('reviewBox').classList.toggle('hidden');
+  };
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+submitBtn.addEventListener('click', scoreRound);
+renderRound();
+</script>
+</body>
+</html>
