@@ -39,6 +39,13 @@ button{width:100%;border:0;border-radius:14px;padding:14px 18px;font-size:1rem;f
 .ref{color:var(--muted);font-size:.88rem;margin-top:4px}
 .hidden{display:none}
 .footer{text-align:center;color:var(--muted);font-size:.85rem;padding:12px 0 30px}
+
+.quiz-nav-wrap{margin:14px 0 4px}
+.quiz-nav-label{font-size:.82rem;color:var(--muted);font-weight:700;margin-bottom:7px}
+.quiz-nav{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.quiz-nav button{flex:0 0 auto;width:auto;min-width:48px;padding:9px 12px;border-radius:999px;background:#eef2ef;color:var(--ink);border:1px solid var(--line);font-size:.9rem;font-weight:750}
+.quiz-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
 @media (max-width:520px){
   .wrap{padding:12px} .card{padding:15px;border-radius:15px}
   .question{font-size:1.05rem} .option{padding:11px}
@@ -53,12 +60,21 @@ button{width:100%;border:0;border-radius:14px;padding:14px 18px;font-size:1rem;f
   <div class="subtitle">Take the quiz in 10-question rounds. Your score appears after each round, then you can continue to the next set.</div>
   <div class="bar"><div id="progressBar"></div></div>
   <div class="meta"><span id="roundLabel"></span><span id="progressLabel"></span></div>
+  <div class="quiz-nav-wrap">
+    <div class="quiz-nav-label">Jump to a quiz</div>
+    <div class="quiz-nav" id="topQuizNav"></div>
+  </div>
 </header>
 
 <main id="quiz"></main>
 <section id="results" class="card result hidden"></section>
 <div class="actions" id="actions">
   <button class="primary" id="submitBtn">Score This Round</button>
+</div>
+
+<div class="quiz-nav-wrap">
+  <div class="quiz-nav-label">Jump to a quiz</div>
+  <div class="quiz-nav" id="bottomQuizNav"></div>
 </div>
 <div class="footer">100 questions • 10 rounds</div>
 </div>
@@ -75,8 +91,31 @@ const actions = document.getElementById('actions');
 const roundLabel = document.getElementById('roundLabel');
 const progressLabel = document.getElementById('progressLabel');
 const progressBar = document.getElementById('progressBar');
+const topQuizNav = document.getElementById('topQuizNav');
+const bottomQuizNav = document.getElementById('bottomQuizNav');
+
+
+function renderQuizNav(){
+  [topQuizNav, bottomQuizNav].forEach(nav => {
+    nav.innerHTML = '';
+    for(let i = 0; i < 10; i++){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = `Quiz ${i + 1}`;
+      if(i === round) b.classList.add('active');
+      b.setAttribute('aria-label', `Go to Quiz ${i + 1}, questions ${i * 10 + 1} through ${i * 10 + 10}`);
+      b.addEventListener('click', () => {
+        round = i;
+        localStorage.setItem('gmcQuizRound', round);
+        renderRound();
+      });
+      nav.appendChild(b);
+    }
+  });
+}
 
 function renderRound(){
+  renderQuizNav();
   results.classList.add('hidden');
   quiz.classList.remove('hidden');
   actions.classList.remove('hidden');
